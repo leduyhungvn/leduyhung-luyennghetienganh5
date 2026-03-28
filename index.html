@@ -482,10 +482,11 @@
     }
 
     // =====================================================
-    // KHAI BÁO DỮ LIỆU CÁC BÀI (chuyển từ lớp 4, giữ nguyên nội dung)
+    // KHAI BÁO DỮ LIỆU CÁC BÀI (đã chuyển từ lớp 4 sang lớp 5, giữ nội dung)
     // =====================================================
 
-    // ---------- UNIT 1 BÀI 1 ----------
+    // ---------- UNIT 1 BÀI 1 ---------- (Giữ nguyên dữ liệu từ E4_U1_B1)
+
 var E5_U1_B1 = {
   P1: [
     { id: 1, word: "What is Lan's name?", correct: "Lan", wrong1: "Mai", wrong2: "Hoa" },
@@ -10709,8 +10710,8 @@ P5: [
 };
 
 
-
     // ---------- UNIT 2 đến UNIT 20, mỗi unit 10 bài rỗng ----------
+    // Dùng vòng lặp để khai báo nhanh
     (function createEmptyLessons() {
         for (let unit = 2; unit <= 20; unit++) {
             for (let bai = 1; bai <= 10; bai++) {
@@ -10732,13 +10733,26 @@ P5: [
     scanLessons();
 
     // =====================================================
-    // HÀM KIỂM TRA BÀI HỢP LỆ (CÓ DỮ LIỆU)
+    // HÀM SẮP XẾP GIỌNG THEO NỀN TẢNG
     // =====================================================
-    function isLessonValid(lesson) {
-        return (lesson.P1 && lesson.P1.length > 0) ||
-               (lesson.P2 && lesson.P2.length > 0) ||
-               (lesson.P3 && lesson.P3.length > 0) ||
-               (lesson.P4 && lesson.P4 !== "Chưa có nội dung");
+    function sortVoicesByPlatform(voices) {
+        const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+        if (isIOS) {
+            // Đưa giọng Samantha lên đầu (nếu có)
+            const samanthaIndex = voices.findIndex(v => v.name.toLowerCase().includes('samantha'));
+            if (samanthaIndex !== -1) {
+                const samantha = voices[samanthaIndex];
+                const otherVoices = voices.filter((_, idx) => idx !== samanthaIndex);
+                return [samantha, ...otherVoices];
+            }
+            return voices;
+        } else {
+            // Desktop / Android: ưu tiên Google, Microsoft lên đầu
+            const googleVoices = voices.filter(v => v.name.toLowerCase().includes('google'));
+            const microsoftVoices = voices.filter(v => v.name.toLowerCase().includes('microsoft'));
+            const otherVoices = voices.filter(v => !v.name.toLowerCase().includes('google') && !v.name.toLowerCase().includes('microsoft'));
+            return [...googleVoices, ...microsoftVoices, ...otherVoices];
+        }
     }
 
     // =====================================================
@@ -10923,13 +10937,11 @@ P5: [
     function populateVoiceList() {
         if (!('speechSynthesis' in window)) return;
         const voices = speechSynthesis.getVoices();
-        voiceList = voices;
-
+        voiceList = sortVoicesByPlatform(voices);
         const davidVoice = voiceList.find(v => 
             v.name.toLowerCase().includes('david') && 
             (v.lang.includes('en-GB') || v.lang.includes('en-US'))
         );
-
         updateVoiceDropdowns(davidVoice);
     }
 
@@ -10970,6 +10982,14 @@ P5: [
         if (speechSynthesis.getVoices().length > 0) {
             populateVoiceList();
         }
+    }
+
+    // ---------- HÀM KIỂM TRA BÀI HỢP LỆ (CÓ DỮ LIỆU) ----------
+    function isLessonValid(lesson) {
+        return (lesson.P1 && lesson.P1.length > 0) ||
+               (lesson.P2 && lesson.P2.length > 0) ||
+               (lesson.P3 && lesson.P3.length > 0) ||
+               (lesson.P4 && lesson.P4 !== "Chưa có nội dung");
     }
 
     // ---------- HÀM CHUẨN BỊ DỮ LIỆU (lớp 5) ----------
@@ -11314,20 +11334,14 @@ P5: [
                 <div id="passageContainer" style="display:none;" class="hidden-passage">${passageText}</div>
                 
                 <h3>📋 Chi tiết câu hỏi</h3>
-                <table>
-                    <thead>
-                        <tr><th>STT</th><th>Nội dung</th><th>Đáp án chọn</th><th>Đáp án đúng</th></tr>
-                    </thead>
-                    <tbody>`;
+                <table><thead><tr><th>STT</th><th>Nội dung</th><th>Đáp án chọn</th><th>Đáp án đúng</th></tr></thead><tbody>`;
         quizData.forEach((q,i)=>{
             let chosen = userAnswers[i]?.chosen || '—';
             let correct = q.correct;
             let wrongClass = (chosen !== correct) ? 'wrong-answer' : '';
             html += `<tr><td>${i+1}</td><td>${q.question}</td><td class="${wrongClass}">${chosen}</td><td><span class="correct-answer">${correct}</span></td></tr>`;
         });
-        html += `</tbody>
-                </table>
-                <br>
+        html += `</tbody></table><br>
                 <div class="action-buttons-container">
                     <button class="btn-back" id="backToMainBtnReport">◀ QUAY LẠI</button>
                     <a href="#" class="scroll-top" id="scrollTopReport">⬆️</a>
@@ -11335,7 +11349,7 @@ P5: [
             </div>`;
         app.innerHTML = html;
 
-        // Xử lý voice dropdowns trong report
+        // Xử lý voice dropdowns trong report (giống quiz)
         if (voiceList.length) {
             const davidVoice = voiceList.find(v => 
                 v.name.toLowerCase().includes('david') && 
