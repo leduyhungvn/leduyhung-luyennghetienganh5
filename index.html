@@ -10848,7 +10848,7 @@ P5: [
             utterance.onend = () => {
                 index++;
                 if (index < audioQueue.length && !isPaused) {
-                    audioTimeout = setTimeout(playNext, gapSec * 1000);
+                    audioTimeout = setTimeout(playNext, gapSec * 500);
                 } else if (index >= audioQueue.length) {
                     stopAllAudio();
                 }
@@ -10856,7 +10856,7 @@ P5: [
             utterance.onerror = () => {
                 index++;
                 if (index < audioQueue.length && !isPaused) {
-                    audioTimeout = setTimeout(playNext, gapSec * 1000);
+                    audioTimeout = setTimeout(playNext, gapSec * 500);
                 }
             };
             speechSynthesis.speak(utterance);
@@ -11129,6 +11129,10 @@ P5: [
                         <option value="4">4s</option>
                         <option value="5">5s</option>
                         <option value="6">6s</option>
+                        <option value="7">7s</option>
+                        <option value="8">8s</option>
+                        <option value="9">9s</option>
+                        <option value="10">10s</option>
                     </select>
                     <select id="loopCountSelect">
                         <option value="1" selected>1 lần</option>
